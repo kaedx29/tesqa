@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Question Answering</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+      crossorigin="anonymous"
+    />
+    <!-- Jquery -->
+    <script
+      src="https://code.jquery.com/jquery-3.7.1.min.js"
+      integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+      crossorigin="anonymous"
+    ></script>
+
+    <style>
+      #btnSubmit {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .loader {
+        width: 16px;
+        height: 16px;
+        border: 2px solid #fff;
+        border-bottom-color: transparent;
+        border-radius: 50%;
+        display: inline-block;
+        box-sizing: border-box;
+        animation: rotation 1s linear infinite;
+      }
+
+      @keyframes rotation {
+        0% {
+          transform: rotate(0deg);
+        }
+
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container d-flex justify-content-center">
+      <div class="col-6">
+        <h1 class="mt-3 my-5 text-center">
+          Sistem Tanya Jawab<br /><span class="text-center"
+            >Berbasis Konteks</span
+          >
+        </h1>
+        <div class="mb-3">
+          <label for="context" class="form-label">Konteks</label>
+          <div class="d-flex justify-content-end col-6 float-end">
+            <select class="form-select form-select-sm" id="selectExample">
+              <option disabled selected>Klik untuk lihat contoh</option>
+              <option value="0">Contoh 1 - Buku Tematik Kelas 3 SD</option>
+              <option value="1">Contoh 2 - Buku Tematik Kelas 4 SD</option>
+              <option value="2">Contoh 3 - Portal Web Info</option>
+              <option value="3">Contoh 4 - Republika</option>
+              <option value="4">Contoh 5 - Kompas</option>
+            </select>
+          </div>
+          <textarea
+            class="form-control"
+            rows="8"
+            name="context"
+            id="context"
+            placeholder="Masukkan konteks"
+          ></textarea>
+        </div>
+        <div class="mb-3">
+          <label for="question" class="form-label">Pertanyaan</label>
+          <input
+            type="email"
+            class="form-control"
+            id="question"
+            placeholder="Masukkan pertanyaan"
+          />
+        </div>
+
+        <button
+          type="button"
+          id="btnSubmit"
+          class="btn btn-primary w-100"
+          onclick="submitQuestion()"
+        >
+          <span>Submit</span>
+        </button>
+        <div class="mt-3" id="answer"></div>
+      </div>
+    </div>
+
+    <!-- Request API -->
+    <script>
+      function submitQuestion() {
+        let context = $("#context").val();
+        let question = $("#question").val();
+
+        let loader = $("<span>").addClass("me-2 loader");
+        $("#btnSubmit").prepend(loader).addClass("disabled");
+
+        $.ajax({
+          type: "POST",
+          url: "http://127.0.0.1:5000/qa",
+          contentType: "application/json",
+          data: JSON.stringify({ context: context, question: question }),
+          success: function (resp) {
+            loader.remove();
+            $("#btnSubmit").removeClass("disabled");
+            $("#answer").html(`<h4>Jawaban</h4><p>${resp.answer}</p>`);
+          },
+          error: function (xhr, status, error) {
+            console.error(`Error (Status: ${xhr.status}): ${error}`);
+
+            $("#answer").html(
+              `<h4>Error</h4><p>Terjadi kesalahan saat memproses pertanyaan.</p>`
+            );
+          },
+        });
+      }
+
+      $(document).ready(function () {
+        var arrayValues = [
+          "Dua orang pengembara berjalan di sepanjang jalan yang berdebu dan tandus di hari yang sangat panas. Tidak lama kemudian, mereka menemukan sebuah pohon besar.",
+          "Raja Purnawarman mulai memerintah Kerajaan Tarumanegara pada tahun 395 M. Pada masa pemerintahannya, ia selalu berjuang untuk rakyatnya. Ia membangun saluran air dan memberantas perompak.\r\rRaja Purnawarman sangat memperhatikan kesejahteraan rakyatnya.la memperbaiki aliran Sungai Gangga di daerah Cirebon.Dua tahun kemudian, ia juga memperbaiki dan memperindah alur Sungai Cupu sehingga air bisa mengalir ke seluruh kerajaan.Para petani senang karena ladang mereka mendapat air dari aliran sungai sehingga menjadi subur.Ladang para petani tidak kekeringan pada musim kemarau.",
+          "Pada masa tersebut, buku peraga Ini Budi laris manis tidak hanya di Jakarta, Bengkulu, Palembang, dan kota lain melainkan hampir di seluruh kota di Indonesia. Namun Siti Rahmani Rauf mengakui bahwa buku paket Ini Budi sebenarnya telah ada namun buku peraganya yang tidak ada, oleh karena itu di buatlah buku peraga Ini Budi, yang tidak lain adalah pembelajaran yang pernah kita jumpai ketika belajar di bangku kelas 1 SD. Karena buku peraga itulah yang membuat kalimat Ini Budi menjadi sangat populer hingga saat ini untuk di pelajari oleh siswa kelas 1 SD.",
+          "Rabiul Awal atau bulan ketiga dalam kalender Hijriyah adalah bulan yang dimuliakan umat Islam. Sebab, di bulan ini Nabi Muhammad SAW lahir ke dunia sebagai manusia yang diutus oleh Allah SWT untuk menyampaikan ajaran-Nya.\r\rJauh sebelum kelahiran Rasulullah, Allah sudah mengabarkan akan kehadiran Nabi akhir zaman.Kedatangan Rasulullah telah disebut - sebut dalam kitab sebelum Alquran, yakni dalam kitab Taurat dan Injil.Sehingga, para rabi Yahudi dan pendeta Nasrani telah mengenal Rasulullah dari gambaran tentang sifat - sifatnya",
+          "Pemerintah berencana menaikkan tiket Candi Borobudur menjadi Rp 750.000/orang. Kenaikan harga tiket ini bertujuan untuk membatasi jumlah pengunjung sehingga kondisi candi sebagai cagar budaya tetap ini tetap lestari. Namun, harga tiket yang mencapai Rp 750.000 per orang itu bukanlah tiket masuk, melainkan tiket naik ke atas Candi Borobudur. Direktur Utama PT Aviasi Pariwisata Indonesia (Persero)/InJourney, Dony Oskaria menyebut tiket masuk Candi Borobudur tak berubah.",
+        ];
+
+        $("#selectExample").change(function () {
+          var selectedIndex = $(this).val();
+
+          $("#context").val(arrayValues[selectedIndex]);
+        });
+      });
+    </script>
+    <!-- Bootstrap JS -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+      integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
+      integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
